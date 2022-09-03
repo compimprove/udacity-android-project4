@@ -2,11 +2,9 @@ package com.udacity.project4.locationreminders.data.local
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.room.Room
-import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.SmallTest;
 import com.firebase.ui.auth.AuthUI.getApplicationContext
-import com.google.android.gms.tasks.Task
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
 
 import org.junit.Before;
@@ -15,8 +13,10 @@ import org.junit.runner.RunWith;
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi;
 import kotlinx.coroutines.test.runBlockingTest
+import org.hamcrest.CoreMatchers
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.CoreMatchers.notNullValue
+import org.hamcrest.MatcherAssert
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.After
 import org.junit.Test
@@ -64,6 +64,18 @@ class RemindersDaoTest {
         assertThat(reminderSaved.longitude, `is`(reminder.longitude))
         assertThat(reminderSaved.location, `is`(reminder.location))
 
+    }
+
+    @Test
+    fun getByIdNotFound() = runBlockingTest {
+        // WHEN
+        val reminder = database.reminderDao().getReminderById("testid")
+
+        // THEN
+        assertThat(
+            reminder == null,
+            CoreMatchers.equalTo(true)
+        )
     }
 
     @Test

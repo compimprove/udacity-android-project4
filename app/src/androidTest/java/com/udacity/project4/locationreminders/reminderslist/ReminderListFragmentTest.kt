@@ -3,25 +3,31 @@ package com.udacity.project4.locationreminders.reminderslist
 import android.app.Application
 import android.os.Bundle
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.fragment.app.testing.launchFragmentInContainer
 import androidx.navigation.NavController
 import androidx.navigation.Navigation
+import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ApplicationProvider.getApplicationContext
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.google.android.material.snackbar.Snackbar
 import com.udacity.project4.MainCoroutineRule
 import com.udacity.project4.R
 import com.udacity.project4.locationreminders.data.ReminderDataSource
+import com.udacity.project4.locationreminders.data.dto.ReminderDTO
 import com.udacity.project4.locationreminders.data.local.FakeDataSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runBlockingTest
 import kotlinx.coroutines.test.setMain
+import org.hamcrest.CoreMatchers
+import org.hamcrest.MatcherAssert
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Rule
@@ -79,7 +85,6 @@ class ReminderListFragmentTest : AutoCloseKoinTest() {
 
         // WHEN - Click on the "+" button
         onView(withId(R.id.addReminderFAB)).perform(click())
-
         // THEN - Verify that we navigate to the add screen
         verify(navController).navigate(
             ReminderListFragmentDirections.toSaveReminder()
@@ -87,15 +92,33 @@ class ReminderListFragmentTest : AutoCloseKoinTest() {
     }
 
     @Test
-    fun snackBar_showError() = runBlocking {
+    fun snackBar_showError() {
         // GIVEN - On the ReminderList screen
         localDataSource.setResponseError("Something when wrong")
-        val snackbar = mock(Snackbar::class.java)
-        val scenario = launchFragmentInContainer<ReminderListFragment>(Bundle(), R.style.AppTheme)
-
+        launchFragmentInContainer<ReminderListFragment>(Bundle(), R.style.AppTheme)
         // THEN - Verify that snackbar will show
-        verify(snackbar).show()
+        onView(withId(com.google.android.material.R.id.snackbar_text))
+            .check(matches(withText("Something when wrong")));
     }
 
-//    TODO: test the displayed data on the UI.
+    @Test
+    fun snackBar_showListData() {
+        // GIVEN - On the ReminderList screen
+        val reminder1 = ReminderDTO("Title1", "Description1", "Location1", 1.0, 2.0, "id1")
+        val reminder2 = ReminderDTO("Title2", "Description1", "Location1", 1.0, 2.0, "id2")
+        val reminder3 = ReminderDTO("Title3", "Description1", "Location1", 1.0, 2.0, "id3")
+        localDataSource.setData(mutableListOf(reminder1, reminder2, reminder3))
+
+        val scenario = launchFragmentInContainer<ReminderListFragment>(Bundle(), R.style.AppTheme)
+        // THEN - Verify that data will show enough
+        var itemCount = 0
+        scenario.onFragment {
+            itemCount = it.activity!!.findViewById<RecyclerView>(R.id.remindersRecyclerView)!!.childCount
+        }
+
+        MatcherAssert.assertThat(
+            itemCount,
+            CoreMatchers.equalTo(3)
+        )
+    }
 }

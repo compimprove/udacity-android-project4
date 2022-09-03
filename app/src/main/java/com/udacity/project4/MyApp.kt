@@ -1,6 +1,7 @@
 package com.udacity.project4
 
 import android.app.Application
+import com.google.android.gms.maps.model.LatLng
 import com.udacity.project4.locationreminders.data.ReminderDataSource
 import com.udacity.project4.locationreminders.data.local.LocalDB
 import com.udacity.project4.locationreminders.data.local.RemindersLocalRepository
@@ -37,6 +38,7 @@ class MyApp : Application() {
             }
             single { RemindersLocalRepository(get()) as ReminderDataSource }
             single { LocalDB.createRemindersDao(this@MyApp) }
+            single { LatLng(37.424, -122.079) }
         }
 
         startKoin {

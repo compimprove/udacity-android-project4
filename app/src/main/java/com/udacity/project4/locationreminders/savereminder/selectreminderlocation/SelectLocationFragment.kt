@@ -28,6 +28,7 @@ import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.base.NavigationCommand
 import com.udacity.project4.databinding.FragmentSelectLocationBinding
 import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
+import com.udacity.project4.utils.EspressoIdlingResource
 import com.udacity.project4.utils.REQUEST_LOCATION_PERMISSION
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
 import org.koin.android.ext.android.inject
@@ -37,11 +38,13 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     private lateinit var map: GoogleMap
     private var locationMarker: Marker? = null
     override val _viewModel: SaveReminderViewModel by inject()
+    private val _initMapLocation: LatLng by inject()
     private lateinit var binding: FragmentSelectLocationBinding
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
+        EspressoIdlingResource.increment()
         binding =
             DataBindingUtil.inflate(inflater, R.layout.fragment_select_location, container, false)
 
@@ -73,10 +76,11 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                     .title(poiName)
             )
         } else {
-            val centerLocation =  LatLng(-34.0, 151.0)
+            val centerLocation =  _initMapLocation
             setPoiClick(map)
             map.moveCamera(CameraUpdateFactory.newLatLngZoom(centerLocation, 15f))
         }
+        EspressoIdlingResource.decrement()
     }
 
     override fun onRequestPermissionsResult(
