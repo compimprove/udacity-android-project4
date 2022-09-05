@@ -2,6 +2,7 @@ package com.udacity.project4.locationreminders.savereminder.selectreminderlocati
 
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
@@ -32,8 +33,13 @@ import com.udacity.project4.utils.EspressoIdlingResource
 import com.udacity.project4.utils.REQUEST_LOCATION_PERMISSION
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
 import org.koin.android.ext.android.inject
+import java.util.*
 
 class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
+
+    companion object {
+        private val TAG = "SelectLocationFragment"
+    }
 
     private lateinit var map: GoogleMap
     private var locationMarker: Marker? = null
@@ -57,17 +63,45 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         val mapFragment = childFragmentManager
             .findFragmentById(R.id.map_fragment) as SupportMapFragment
         mapFragment.getMapAsync(this)
-
         return binding.root
+    }
+
+    private fun setMapStyle(map: GoogleMap) {
+        context?.let {
+            try {
+                val success = map.setMapStyle(
+                    MapStyleOptions.loadRawResourceStyle(
+                        it,
+                        R.raw.map_style
+                    )
+                )
+
+                if (!success) {
+                    Log.e(TAG, "Style parsing failed.")
+                } else {
+
+                }
+            } catch (e: Resources.NotFoundException) {
+                Log.e(TAG, "Can't find style. Error: ", e)
+            }
+        }
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
-        setPoiClick(map)
+        setMapStyle(map)
         enableMyLocation()
-        if (_viewModel.selectedPOI.value != null) {
-            val centerLocation = _viewModel.selectedPOI.value!!.latLng
-            val poiName = _viewModel.selectedPOI.value?.name
+        map.setOnMapLoadedCallback {
+            EspressoIdlingResource.decrement()
+        }
+        setPoiClick(map)
+        setMapLongClick(map)
+        if (_viewModel.latitude.value != null
+            && _viewModel.longitude.value != null
+            && _viewModel.reminderSelectedLocationStr.value != null
+        ) {
+            val centerLocation = LatLng(_viewModel.latitude.value!!, _viewModel.longitude.value!!)
+            val poiName = _viewModel.reminderSelectedLocationStr.value!!
             map.moveCamera(CameraUpdateFactory.newLatLngZoom(centerLocation, 15f))
             locationMarker?.remove()
             locationMarker = map.addMarker(
@@ -76,11 +110,9 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                     .title(poiName)
             )
         } else {
-            val centerLocation =  _initMapLocation
-            setPoiClick(map)
+            val centerLocation = _initMapLocation
             map.moveCamera(CameraUpdateFactory.newLatLngZoom(centerLocation, 15f))
         }
-        EspressoIdlingResource.decrement()
     }
 
     override fun onRequestPermissionsResult(
@@ -90,7 +122,8 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     ) {
         if (requestCode == REQUEST_LOCATION_PERMISSION) {
             if (grantResults.isNotEmpty() && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
-                enableMyLocation()
+                @SuppressLint("MissingPermission")
+                map.isMyLocationEnabled = true
             }
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
@@ -101,13 +134,9 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
             if (ActivityCompat.checkSelfPermission(
                     context,
                     Manifest.permission.ACCESS_FINE_LOCATION
-                ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                    context,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
                 ) != PackageManager.PERMISSION_GRANTED
             ) {
-                ActivityCompat.requestPermissions(
-                    requireActivity(),
+                requestPermissions(
                     arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
                     REQUEST_LOCATION_PERMISSION
                 )
@@ -126,12 +155,36 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                     .position(poi.latLng)
                     .title(poi.name)
             )
-            _viewModel.selectedPOI.value = poi
+//            _viewModel.selectedPOI.value = poi
             _viewModel.latitude.value = poi.latLng.latitude
             _viewModel.longitude.value = poi.latLng.longitude
             _viewModel.reminderSelectedLocationStr.value = poi.name
-            _viewModel.fenceId.value = poi.placeId
             locationMarker?.showInfoWindow()
+        }
+    }
+
+    private fun setMapLongClick(map: GoogleMap) {
+        map.setOnMapLongClickListener { latLng ->
+            // A Snippet is Additional text that's displayed below the title.
+            val snippet = String.format(
+                Locale.getDefault(),
+                "Lat: %1$.5f, Long: %2$.5f",
+                latLng.latitude,
+                latLng.longitude
+            )
+            val title = getString(R.string.dropped_pin)
+            locationMarker?.remove()
+            locationMarker = map.addMarker(
+                MarkerOptions()
+                    .position(latLng)
+                    .title(title)
+                    .snippet(snippet)
+
+            )
+            locationMarker?.showInfoWindow()
+            _viewModel.latitude.value = latLng.latitude
+            _viewModel.longitude.value = latLng.longitude
+            _viewModel.reminderSelectedLocationStr.value = title
         }
     }
 

@@ -94,8 +94,23 @@ class RemindersLocalRepositoryTest {
         val result = localDataSource.getReminders()
 
         // THEN
+        assertThat(result is Result.Success<List<ReminderDTO>>, `is`(true))
         if (result is Result.Success<List<ReminderDTO>>) {
             assertThat(result.data.size, `is`(0))
         }
+    }
+
+    @Test
+    fun getReminder_notFound() = runBlocking {
+        // GIVEN
+        val reminder = ReminderDTO("Title1", "Description1", "Location1", 1.0, 2.0, "id1")
+        localDataSource.saveReminder(reminder)
+
+        // WHEN
+        val result = localDataSource.getReminder("id2")
+
+        // THEN
+        assertThat(result is Result.Error, `is`(true))
+        assertThat((result as Result.Error).message, `is`("Reminder not found!"))
     }
 }

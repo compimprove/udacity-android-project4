@@ -98,7 +98,7 @@ class ReminderListFragmentTest : AutoCloseKoinTest() {
         launchFragmentInContainer<ReminderListFragment>(Bundle(), R.style.AppTheme)
         // THEN - Verify that snackbar will show
         onView(withId(com.google.android.material.R.id.snackbar_text))
-            .check(matches(withText("Something when wrong")));
+            .check(matches(withText("Something when wrong")))
     }
 
     @Test

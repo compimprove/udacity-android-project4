@@ -36,7 +36,6 @@ class RemindersActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_reminders)
-        requestForegroundAndBackgroundLocationPermissions()
     }
 
     private fun foregroundAndBackgroundLocationPermissionApproved(): Boolean {
@@ -108,12 +107,11 @@ class RemindersActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_TURN_DEVICE_LOCATION_ON) {
-            // We don't rely on the result code, but just check the location setting again
             checkDeviceLocationSettings(false)
         }
     }
 
-    fun checkDeviceLocationSettings(resolve: Boolean = true, onSuccess: () -> Unit = {}) {
+    private fun checkDeviceLocationSettings(resolve: Boolean = true, onSuccess: () -> Unit = {}) {
         val locationRequest = LocationRequest.create().apply {
             priority = LocationRequest.PRIORITY_LOW_POWER
         }
