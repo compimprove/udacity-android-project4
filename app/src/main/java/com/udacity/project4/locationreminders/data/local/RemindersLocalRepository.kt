@@ -64,6 +64,14 @@ class RemindersLocalRepository(
         }
     }
 
+    override suspend fun deleteReminder(id: String) {
+        wrapEspressoIdlingResource {
+            withContext(ioDispatcher) {
+                remindersDao.deleteReminder(id)
+            }
+        }
+    }
+
     /**
      * Deletes all the reminders in the db
      */
@@ -74,4 +82,6 @@ class RemindersLocalRepository(
             }
         }
     }
+
+
 }

@@ -36,4 +36,10 @@ class FakeDataSource(private var listReminders: MutableList<ReminderDTO>) : Remi
         listReminders = mutableListOf()
     }
 
+    override suspend fun deleteReminder(id: String) {
+        listReminders.removeIf {
+            it.id == id
+        }
+    }
+
 }

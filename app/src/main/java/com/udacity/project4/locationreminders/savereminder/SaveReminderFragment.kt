@@ -241,8 +241,8 @@ class SaveReminderFragment : BaseFragment() {
                     reminder.longitude!!,
                     GeofencingConstants.GEOFENCE_RADIUS_IN_METERS
                 )
-                .setExpirationDuration(GeofencingConstants.GEOFENCE_EXPIRATION_IN_MILLISECONDS)
                 .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
+                .setExpirationDuration(Geofence.NEVER_EXPIRE)
                 .build()
 
             val geofencingRequest = GeofencingRequest.Builder()

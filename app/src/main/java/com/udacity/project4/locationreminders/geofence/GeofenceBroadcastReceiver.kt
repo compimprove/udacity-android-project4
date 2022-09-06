@@ -36,11 +36,14 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
             if (geofencingEvent.geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER
                 && geofencingEvent.triggeringGeofences.isNotEmpty()
             ) {
-                val fenceId = geofencingEvent.triggeringGeofences[0].requestId
-                Log.i(TAG, "${context.getString(R.string.geofence_entered)} $fenceId")
-                val geofenceServiceIntent = Intent(context, GeofenceTransitionsJobIntentService::class.java)
-                geofenceServiceIntent.putExtra(FENCE_ID, fenceId)
-                GeofenceTransitionsJobIntentService.enqueueWork(context, geofenceServiceIntent)
+                geofencingEvent.triggeringGeofences.forEach { geofence ->
+                    val fenceId = geofence.requestId
+                    Log.i(TAG, "${context.getString(R.string.geofence_entered)} $fenceId")
+                    val geofenceServiceIntent =
+                        Intent(context, GeofenceTransitionsJobIntentService::class.java)
+                    geofenceServiceIntent.putExtra(FENCE_ID, fenceId)
+                    GeofenceTransitionsJobIntentService.enqueueWork(context, geofenceServiceIntent)
+                }
             }
         }
     }

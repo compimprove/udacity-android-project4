@@ -59,6 +59,7 @@ class GeofenceTransitionsJobIntentService : JobIntentService(), CoroutineScope {
                         reminderDTO.id
                     )
                 )
+                remindersLocalRepository.deleteReminder(reminderDTO.id)
             }
         }
     }
